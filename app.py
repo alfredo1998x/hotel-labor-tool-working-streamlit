@@ -35,6 +35,43 @@ from db import Actual, Schedule, RoomActual, RoomForecast, Position, Department,
 from db import Schedule, Employee, Position, ShiftTime, RoomForecast, Actual
 import db                                # local ORM layer
 
+import streamlit as st
+import requests
+
+API_URL = "http://localhost:8000"  # change to your FastAPI URL if deployed
+
+# 🔐 Step 1: Login Form
+if "token" not in st.session_state:
+    st.title("Hotel Login")
+    with st.form("login_form"):
+        username = st.text_input("Username")
+        password = st.text_input("Password", type="password")
+        submit = st.form_submit_button("Login")
+
+    if submit:
+        response = requests.post(f"{API_URL}/login", json={
+            "username": username,
+            "password": password
+        })
+
+        if response.status_code == 200:
+            st.success("Login successful!")
+            st.session_state.token = response.json()["access_token"]
+
+            # 🔄 Fetch hotel info for filtering
+            user = requests.get(f"{API_URL}/me", headers={
+                "Authorization": f"Bearer {st.session_state.token}"
+            })
+
+            if user.status_code == 200:
+                st.session_state.hotel_name = user.json()["hotel_name"]
+                st.experimental_rerun()
+            else:
+                st.error("Could not retrieve user info.")
+        else:
+            st.error("Invalid username or password.")
+    st.stop()  # stop execution until logged in
+
 # ─────────────── Utility Functions ───────────────
 
 def get_week_start(any_date=None):
