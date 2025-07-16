@@ -65,7 +65,7 @@ if "token" not in st.session_state:
 
             if user.status_code == 200:
                 st.session_state.hotel_name = user.json()["hotel_name"]
-                st.experimental_rerun()
+                st.rerun()
             else:
                 st.error("Could not retrieve user info.")
         else:
